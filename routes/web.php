@@ -19,19 +19,17 @@ Route::get('/logout', function () {
 // Protected routes here
 Route::middleware('auth')->group(function () {
     Volt::route('/', 'index');
-    Volt::route('/student','student' )->name('student');
-    Volt::route('/annee_scolaire', 'annee_scolaire')->name('annee');
-    Volt::route('/correction', 'correction')->name('correction');
+    Volt::route('/student', 'student')->name('student');
+    Volt::route('/annees-scolaires', 'pages.school-years.index')->name('school-years.index');
+    Volt::route('/etablissements', 'pages.establishments.index')->name('establishments.index');
+    Volt::route('/corrections', 'pages.corrections.index')->name('corrections.index');
+    Volt::route('/corrections/{batch}', 'pages.corrections.show')->name('corrections.show');
+    Volt::route('/classes', 'pages.classrooms.index')->name('classrooms.index');
+    Volt::route('/classes/{classroom}', 'pages.classrooms.show')->name('classrooms.show');
     Volt::route('/about', 'about')->name('about');
 
-
-
-
-
-
-
-    Volt::route('/users/create', 'users.create')->name('correction');
-    Volt::route('/users/{user}/edit', 'users.edit');
+    Volt::route('/users/create', 'users.create')->name('users.create');
+    Volt::route('/users/{user}/edit', 'users.edit')->name('users.edit');
     // Volt::route('/', 'users.index');
     // ... more
 });

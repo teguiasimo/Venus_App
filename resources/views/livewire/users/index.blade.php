@@ -31,7 +31,7 @@ new class extends Component {
     public function headers(): array
     {
         return [
-            ['key' => 'id', 'label' => '#', 'class' => 'w-1'],
+            ['key' => 'row_number', 'label' => '#', 'class' => 'w-1', 'sortable' => false],
             ['key' => 'name', 'label' => 'Name', 'class' => 'w-64'],
             ['key' => 'age', 'label' => 'Age', 'class' => 'w-20'],
             ['key' => 'email', 'label' => 'E-mail', 'sortable' => false],
@@ -80,6 +80,9 @@ new class extends Component {
     <!-- TABLE  -->
     <x-card shadow>
         <x-table :headers="$headers" :rows="$users" :sort-by="$sortBy">
+            @scope('cell_row_number', $user)
+            {{ $loop->iteration }}
+            @endscope
             @scope('actions', $user)
             <x-button icon="o-trash" wire:click="delete({{ $user['id'] }})" wire:confirm="Are you sure?" spinner class="btn-ghost btn-sm text-error" />
             @endscope

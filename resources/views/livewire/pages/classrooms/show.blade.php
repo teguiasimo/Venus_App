@@ -554,11 +554,11 @@ new
         </div>
         <x-form wire:submit="processSingleStudent">
             <div class="grid grid-cols-2 gap-4">
-                <x-input label="Taille Nom" wire:model.live="singleFontSize" type="number" min="10" max="100" />
-                <x-input label="Taille Date" wire:model.live="singleDateSize" type="number" min="10" max="100" />
+                <x-input label="Taille Nom" wire:model="singleFontSize" type="number" min="10" max="100" />
+                <x-input label="Taille Date" wire:model="singleDateSize" type="number" min="10" max="100" />
             </div>
             <div class="mt-4">
-                <x-colorpicker label="Couleur du texte" wire:model.live="singleTextColor" icon="o-swatch" />
+                <x-colorpicker label="Couleur du texte" wire:model="singleTextColor" icon="o-swatch" />
             </div>
             <div class="mt-6 p-4 bg-gray-50 rounded-lg flex items-center gap-4">
                 @if($targetStudent->original_photo_path)

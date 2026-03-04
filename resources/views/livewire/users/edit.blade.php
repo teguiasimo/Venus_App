@@ -5,8 +5,11 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use Mary\Traits\Toast;
+use Livewire\Attributes\Title;
 
-new #[Layout('components.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')]
+	#[Title('Mon Profil')]
+ class extends Component {
     use Toast;
 
     public User $user;

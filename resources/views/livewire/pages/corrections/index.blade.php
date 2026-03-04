@@ -5,8 +5,11 @@ use App\Models\SchoolYear;
 use App\Models\CorrectionBatch;
 use Mary\Traits\Toast;
 use Livewire\Attributes\Validate;
+use Livewire\Attributes\Title;
 
-new class extends Component {
+new 
+#[Title('Correction')]
+class extends Component {
     use Toast;
 
     public $schoolYears;

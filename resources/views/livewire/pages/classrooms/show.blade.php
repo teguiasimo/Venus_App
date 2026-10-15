@@ -1,6 +1,7 @@
 <?php
 
 use Livewire\Volt\Component;
+use Livewire\WithPagination;
 use App\Models\Classroom;
 use App\Models\Student;
 use Livewire\WithFileUploads;
@@ -15,7 +16,7 @@ use Livewire\Attributes\Title;
 new
     #[Title('Classe detail')]
     class extends Component {
-        use WithFileUploads, Toast;
+        use WithFileUploads, Toast, WithPagination;
 
         // --- PROPRIÉTÉS ---
 
@@ -201,9 +202,9 @@ new
 
             set_time_limit(300);
 
-            // Prepare ZIP with establishment_classroom naming
-            $establishmentName = mb_strtoupper($this->classroom->establishment->name, 'UTF-8');
-            $classroomName = mb_strtoupper($this->classroom->name, 'UTF-8');
+            // Prepare ZIP with sanitized establishment_classroom naming
+            $establishmentName = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', mb_strtoupper($this->classroom->establishment->name, 'UTF-8'));
+            $classroomName = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', mb_strtoupper($this->classroom->name, 'UTF-8'));
             $zipFileName = "{$establishmentName}_{$classroomName}.zip";
             $zipPath = 'downloads/' . $zipFileName;
 
@@ -233,7 +234,7 @@ new
                         $processedPath = $imageService->processStudentCard($originalPath, $data, $options);
                         $student->update(['processed_photo_path' => $processedPath]);
 
-                        $cleanName = mb_strtoupper($student->full_name, 'UTF-8');
+                        $cleanName = str_replace(['/', '\\'], '-', mb_strtoupper($student->full_name, 'UTF-8'));
                         // Add from Storage path
                         $zip->addFile(Storage::disk('public')->path($processedPath), $cleanName . '.jpg');
                     } catch (\Exception $e) {
@@ -270,8 +271,8 @@ new
             set_time_limit(300);
 
             // Prepare ZIP
-            $establishmentName = mb_strtoupper($this->classroom->establishment->name, 'UTF-8');
-            $classroomName = mb_strtoupper($this->classroom->name, 'UTF-8');
+            $establishmentName = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', mb_strtoupper($this->classroom->establishment->name, 'UTF-8'));
+            $classroomName = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', mb_strtoupper($this->classroom->name, 'UTF-8'));
             $zipFileName = "(R) {$establishmentName}_{$classroomName}.zip";
             $zipPath = 'downloads/' . $zipFileName;
 
@@ -287,7 +288,7 @@ new
                         if (!file_exists($originalPath)) continue;
 
                         // Just rename, no processing
-                        $cleanName = mb_strtoupper($student->full_name, 'UTF-8');
+                        $cleanName = str_replace(['/', '\\'], '-', mb_strtoupper($student->full_name, 'UTF-8'));
                         $zip->addFile($originalPath, $cleanName . '.jpg');
                     } catch (\Exception $e) {
                         Log::error("Error renaming photo for student {$student->id}: " . $e->getMessage());
@@ -477,7 +478,7 @@ new
             @scope('cell_original_photo_path', $student)
             <div wire:key="photo-{{ $student->id }}"
                 x-data="{
-                    src: '{{ asset('storage/' . ($student->original_photo_path ?? '')) }}?v={{ $student->updated_at->timestamp }}',
+                    src: '{{ asset('storage/' . ($student->original_photo_path ?? '')) }}?v={{ $student->updated_at?->timestamp ?? time() }}',
                     hasPhoto: {{ $student->original_photo_path ? 'true' : 'false' }}
                  }"
                 x-init="

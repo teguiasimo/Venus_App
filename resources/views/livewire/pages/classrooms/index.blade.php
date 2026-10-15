@@ -1,6 +1,7 @@
 <?php
 
 use Livewire\Volt\Component;
+use Livewire\WithPagination;
 use App\Models\Classroom;
 use App\Models\Establishment;
 use App\Models\SchoolYear;
@@ -12,7 +13,7 @@ use Livewire\Attributes\Title;
 new
     #[Title('Classes')]
     class extends Component {
-        use Toast;
+        use Toast, WithPagination;
 
         public bool $myModal = false;
         public bool $isEdit = false;

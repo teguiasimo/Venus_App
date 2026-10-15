@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
-Volt::route('/users', 'users.index');
 Volt::route('/register', 'register');
 Volt::route('/login', 'login')->name('login');
 
@@ -28,8 +27,5 @@ Route::middleware('auth')->group(function () {
     Volt::route('/classes/{classroom}', 'pages.classrooms.show')->name('classrooms.show');
     Volt::route('/about', 'about')->name('about');
 
-    Volt::route('/users/create', 'users.create')->name('users.create');
     Volt::route('/users/{user}/edit', 'users.edit')->name('users.edit');
-    // Volt::route('/', 'users.index');
-    // ... more
 });

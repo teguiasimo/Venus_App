@@ -44,9 +44,11 @@ class ImageProcessingService
         $width = $image->width();
         $height = $image->height();
 
-        // Prepare Text
-        $line1 = strtoupper($data['name']);
-        $line2 = strtoupper($data['classroom'] . '    ' . $data['code']);
+        // Prepare Text (UTF-8 uppercase to support accented French characters)
+        $line1 = mb_strtoupper((string) ($data['name'] ?? ''), 'UTF-8');
+        $classroom = (string) ($data['classroom'] ?? '');
+        $code = (string) ($data['code'] ?? '');
+        $line2 = mb_strtoupper(trim($classroom.($code !== '' ? '    '.$code : '')), 'UTF-8');
         $date = now()->format('d-m-Y');
 
         // Draw White Rectangle at Bottom (86% to 100%)
@@ -70,7 +72,6 @@ class ImageProcessingService
             $font->color($textColor);
         });
 
-
         // Positions
         $text1Y = intval($height * 0.92);
         $text2Y = intval($height * 0.96);
@@ -92,8 +93,8 @@ class ImageProcessingService
         });
 
         // Save
-        $fileName = 'processed_' . Str::random(10) . '.jpg';
-        $path = 'photos/' . $fileName;
+        $fileName = 'processed_'.Str::random(10).'.jpg';
+        $path = 'photos/'.$fileName;
 
         Storage::disk('public')->put($path, $image->toJpeg()->toString());
 

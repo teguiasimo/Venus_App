@@ -164,7 +164,7 @@ new
                         $processedPath = $imageService->processStudentCard($originalPath, $data, $options);
                         $req->update(['processed_photo_path' => $processedPath]);
 
-                        $cleanName = mb_strtoupper($req->full_name, 'UTF-8') . '_' . mb_strtoupper($req->establishment_code, 'UTF-8');
+                        $cleanName = str_replace(['/', '\\'], '-', mb_strtoupper($req->full_name, 'UTF-8')) . '_' . str_replace(['/', '\\'], '-', mb_strtoupper($req->establishment_code, 'UTF-8'));
                         $zip->addFile(Storage::disk('public')->path($processedPath), $cleanName . '.jpg');
                     } catch (\Exception $e) {
                         // Log error

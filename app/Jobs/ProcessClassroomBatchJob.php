@@ -2,68 +2,80 @@
 
 namespace App\Jobs;
 
+use App\Models\Classroom;
 use App\Services\ImageProcessingService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use ZipArchive;
 
 class ProcessClassroomBatchJob implements ShouldQueue
 {
     use Queueable;
 
-    // ...
+    public function __construct(
+        public Classroom $classroom,
+        public array $options = []
+    ) {}
+
     public function handle(ImageProcessingService $imageService): void
     {
         $this->classroom->update(['is_processing' => true]);
 
-        $students = $this->classroom->students()->whereNotNull('original_photo_path')->get();
+        try {
+            $students = $this->classroom->students()
+                ->whereNotNull('original_photo_path')
+                ->get();
 
-        // Prepare ZIP inside storage/app/public/downloads
-        $zipFileName = 'classe_' . $this->classroom->id . '_' . time() . '.zip';
-        $zipPath = 'downloads/' . $zipFileName;
+            $establishmentName = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', mb_strtoupper($this->classroom->establishment->name ?? 'ETABLISSEMENT', 'UTF-8'));
+            $classroomName = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', mb_strtoupper($this->classroom->name, 'UTF-8'));
+            $zipFileName = "{$establishmentName}_{$classroomName}.zip";
+            $zipPath = 'downloads/'.$zipFileName;
 
-        // Ensure the directory exists in STORAGE (not just public)
-        Storage::disk('public')->makeDirectory('downloads');
+            Storage::disk('public')->makeDirectory('downloads');
+            $fullZipPath = Storage::disk('public')->path($zipPath);
 
-        // Get absolute path for ZipArchive
-        $fullZipPath = Storage::disk('public')->path($zipPath);
+            $zip = new ZipArchive;
+            if ($zip->open($fullZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+                foreach ($students as $student) {
+                    try {
+                        $originalPath = Storage::disk('public')->path($student->original_photo_path);
 
-        $zip = new \ZipArchive;
-        if ($zip->open($fullZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+                        if (! file_exists($originalPath)) {
+                            continue;
+                        }
 
-            foreach ($students as $student) {
-                try {
-                    // Process Image
-                    $originalPath = public_path('storage/' . $student->original_photo_path);
+                        $data = [
+                            'name' => $student->full_name,
+                            'classroom' => $this->classroom->name,
+                            'code' => $this->classroom->establishment->code ?? '',
+                        ];
 
-                    if (! file_exists($originalPath)) {
-                        continue;
+                        $processedPath = $imageService->processStudentCard($originalPath, $data, $this->options);
+                        $student->update(['processed_photo_path' => $processedPath]);
+
+                        $cleanName = str_replace(['/', '\\'], '-', mb_strtoupper($student->full_name, 'UTF-8'));
+                        $zip->addFile(Storage::disk('public')->path($processedPath), $cleanName.'.jpg');
+                    } catch (\Throwable $e) {
+                        Log::error("Error processing student {$student->id}: ".$e->getMessage());
                     }
-
-                    // Use the service to generate the card
-                    $processedPath = $imageService->processStudentCard($originalPath, $student->toArray(), $this->options);
-
-                    // Update Student Record
-                    $student->update(['processed_photo_path' => $processedPath]);
-
-                    // Add to ZIP
-                    $cleanName = mb_strtoupper($student->last_name . '_' . $student->first_name, 'UTF-8');
-                    $zip->addFile(public_path($processedPath), $cleanName . '.jpg');
-                } catch (\Exception $e) {
-                    Log::error("Error processing student {$student->id}: " . $e->getMessage());
                 }
+
+                $zip->close();
+
+                $this->classroom->update([
+                    'is_processing' => false,
+                    'zip_path' => $zipPath,
+                ]);
+            } else {
+                $this->classroom->update(['is_processing' => false]);
+                Log::error("Failed to create ZIP archive at {$fullZipPath}");
             }
-
-            $zip->close();
-
-            $this->classroom->update([
-                'is_processing' => false,
-            ]);
-        } else {
+        } catch (\Throwable $e) {
             $this->classroom->update(['is_processing' => false]);
-            Log::error("Failed to create ZIP archive at $fullZipPath");
+            Log::error("Error in ProcessClassroomBatchJob for classroom {$this->classroom->id}: ".$e->getMessage());
+            throw $e;
         }
     }
 }

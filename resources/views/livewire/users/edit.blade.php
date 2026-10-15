@@ -26,6 +26,10 @@ new #[Layout('components.layouts.app')]
 
     public function mount(User $user): void
     {
+        if (auth()->id() !== $user->id) {
+            abort(403, 'Accès non autorisé.');
+        }
+
         $this->user = $user;
         $this->name = $user->name;
         $this->email = $user->email;
@@ -38,6 +42,10 @@ new #[Layout('components.layouts.app')]
 
     public function updateProfile(): void
     {
+        if (auth()->id() !== $this->user->id) {
+            abort(403, 'Accès non autorisé.');
+        }
+
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($this->user->id)],
@@ -49,12 +57,16 @@ new #[Layout('components.layouts.app')]
 
     public function updatePassword(): void
     {
+        if (auth()->id() !== $this->user->id) {
+            abort(403, 'Accès non autorisé.');
+        }
+
         $validated = $this->validate([
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
         $this->user->update([
-            'password' => bcrypt($validated['password']),
+            'password' => $validated['password'],
         ]);
 
         $this->reset(['password', 'password_confirmation']);

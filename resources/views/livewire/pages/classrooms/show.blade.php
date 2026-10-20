@@ -61,6 +61,11 @@ new
 
         // --- MÉTHODES ---
 
+        public function updatedSearch(): void
+        {
+            $this->resetPage();
+        }
+
         public function mount(Classroom $classroom)
         {
             $this->classroom = $classroom;

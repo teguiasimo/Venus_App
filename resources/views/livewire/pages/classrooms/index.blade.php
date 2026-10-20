@@ -34,6 +34,27 @@ new
         // Filters
         public $selectedSchoolYear = null;
         public $selectedEstablishment = null;
+        public int $perPage = 10;
+
+        public function updatedSearch(): void
+        {
+            $this->resetPage();
+        }
+
+        public function updatedSelectedSchoolYear(): void
+        {
+            $this->resetPage();
+        }
+
+        public function updatedSelectedEstablishment(): void
+        {
+            $this->resetPage();
+        }
+
+        public function updatedPerPage(): void
+        {
+            $this->resetPage();
+        }
 
         public function mount()
         {
@@ -137,7 +158,7 @@ new
             }
 
             return [
-                'classrooms' => $query->orderBy('name')->paginate(10),
+                'classrooms' => $query->orderBy('name')->paginate($this->perPage),
                 'headers' => $this->headers(),
                 'schoolYears' => SchoolYear::orderBy('start_date', 'desc')->get(),
                 'establishments' => Establishment::orderBy('name')->get(),
@@ -179,7 +200,7 @@ new
     @endif
 
     <x-card>
-        <x-table :headers="$headers" :rows="$classrooms" striped>
+        <x-table :headers="$headers" :rows="$classrooms" :per-page-values="[10, 20, 50, 100]" per-page="perPage" striped with-pagination>
             @scope('cell_row_number', $classroom, $classrooms)
             {{ $classrooms->firstItem() + $loop->index }}
             @endscope
